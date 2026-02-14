@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravity Meter | Smart Plant System</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3498db;
+            --accent: #2ecc71;
+            --bg-dark: #2c3e50;
+            --pixel-bg: #ecf0f1;
+            --text-main: #2c3e50;
+            --text-muted: #bdc3c7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'VT323', monospace;
+            /* Pixel Font */
+            image-rendering: pixelated;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            /* Pixel Pattern Background */
+            background-image:
+                linear-gradient(45deg, #34495e 25%, transparent 25%, transparent 75%, #34495e 75%, #34495e),
+                linear-gradient(45deg, #34495e 25%, transparent 25%, transparent 75%, #34495e 75%, #34495e);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .dashboard {
+            background: var(--pixel-bg);
+            border: 4px solid #2c3e50;
+            border-radius: 0;
+            /* No rounded corners */
+            padding: 2rem;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 8px 8px 0px rgba(0, 0, 0, 0.5);
+            /* Hard shadow */
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            font-weight: 400;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 0px #bdc3c7;
+            text-transform: uppercase;
+        }
+
+        p.subtitle {
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        /* GRAVITY METER */
+        .gravity-container {
+            width: 100px;
+            height: 350px;
+            background: #bdc3c7;
+            border-radius: 0;
+            margin: 0 auto 2rem;
+            position: relative;
+            border: 4px solid #2c3e50;
+            overflow: hidden;
+            box-shadow: inset 4px 4px 0px rgba(0, 0, 0, 0.1);
+        }
+
+        .liquid {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #3498db;
+            /* Solid Blue */
+            transition: height 0.5s steps(10);
+            /* Jerky animation */
+            border-top: 4px solid #2980b9;
+            opacity: 1;
+        }
+
+        .icon-wrapper {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            font-weight: 400;
+            background: #fff;
+            color: var(--primary);
+            width: 60px;
+            height: 60px;
+            border: 4px solid #2c3e50;
+            border-radius: 0;
+            /* Square */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+            transition: bottom 0.8s steps(8);
+            /* Pixel movement */
+            z-index: 2;
+        }
+
+        /* Floating animation when wet */
+        .icon-wrapper.floating {
+            animation: pixel-float 2s steps(4) infinite;
+            background: #2ecc71;
+            color: #fff;
+            border-color: #27ae60;
+        }
+
+        @keyframes pixel-float {
+            0% {
+                transform: translate(-50%, 0px);
+            }
+
+            50% {
+                transform: translate(-50%, -8px);
+            }
+
+            100% {
+                transform: translate(-50%, 0px);
+            }
+        }
+
+        .gravity-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: 400;
+            color: rgba(44, 62, 80, 0.1);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ACTIONS */
+        .slider-container {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            border: 2px dashed #95a5a6;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        input[type=range] {
+            width: 100%;
+            cursor: pointer;
+            accent-color: #e67e22;
+            /* Retro Orange */
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        button {
+            border: 4px solid #2c3e50;
+            padding: 1rem;
+            border-radius: 0;
+            font-size: 1.5rem;
+            font-weight: 400;
+            cursor: pointer;
+            box-shadow: 6px 6px 0px #2c3e50;
+            background: #e74c3c;
+            color: white;
+            transition: all 0.1s;
+            text-transform: uppercase;
+        }
+
+        button:active {
+            transform: translate(4px, 4px);
+            box-shadow: 2px 2px 0px #2c3e50;
+        }
+
+        .water-btn {
+            background: #3498db;
+        }
+
+        .reset-btn {
+            background: #95a5a6;
+            font-size: 1.2rem;
+            padding: 0.8rem;
+        }
+
+        /* Rainbow Charge (Pixel Style) */
+        @keyframes rainbow-fill {
+            0% {
+                width: 0%;
+                background-position: 0% 0%;
+            }
+
+            100% {
+                width: 100%;
+                background-position: 100% 0%;
+            }
+        }
+
+        .water-btn.charging::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: linear-gradient(90deg,
+                    #e74c3c, #e67e22, #f1c40f, #2ecc71, #3498db, #9b59b6);
+            /* Pixelated dither effect approx */
+            background-size: 20px 100%;
+            animation: rainbow-fill 2s steps(10) forwards;
+            opacity: 1;
+            z-index: 0;
+        }
+
+        .water-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .config-btn {
+            background: transparent;
+            color: #7f8c8d;
+            border: none;
+            box-shadow: none;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+
+        .config-btn:hover {
+            color: #2c3e50;
+            text-decoration: underline;
+        }
+
+        .config-btn:active {
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* SETTINGS MODAL */
+        .settings-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #bdc3c7;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2rem;
+            border: 4px solid #2c3e50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.1s;
+            z-index: 20;
+        }
+
+        .settings-panel.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        input[type=text] {
+            background: #fff;
+            border: 4px solid #2c3e50;
+            padding: 0.5rem;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            width: 100%;
+            font-size: 1.2rem;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: #e74c3c;
+            border: 2px solid #2c3e50;
+            margin-right: 8px;
+            box-shadow: none;
+        }
+
+        .status-dot.connected {
+            background: #2ecc71;
+            box-shadow: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="dashboard">
+        <h1>Gravity Meter</h1>
+        <p class="subtitle"><span class="status-dot" id="statusDot"></span> 8-Bit Soil</p>
+
+        <div class="gravity-container">
+            <!-- Background Text -->
+            <div class="gravity-label">G</div>
+
+            <!-- The Water Level (Visual only) -->
+            <div class="liquid" id="liquidLevel" style="height: 20%"></div>
+
+            <!-- The Falling/Floating Icon -->
+            <div class="icon-wrapper" id="gravityIcon" style="bottom: 10%">
+                20%
+            </div>
+        </div>
+
+        <div class="slider-container">
+            <label style="display:block; margin-bottom: 0.5rem;">MANUAL CONTROL:</label>
+            <input type="range" id="manualSlider" min="0" max="100" value="20" oninput="manualUpdate(this.value)">
+        </div>
+
+        <div class="info-text" style="margin-bottom: 2rem; color: var(--text-muted); font-size: 1.2rem;">
+            MOISTURE: <span id="moistureValue" style="color: #2c3e50; font-weight: bold; font-size: 1.5rem;">--</span>%
+        </div>
+
+        <div class="controls">
+            <button class="water-btn" id="waterBtn" onclick="triggerWater()">
+                <span>[ WATER ]</span>
+            </button>
+            <button class="reset-btn" onclick="resetData()">
+                [ RESET ]
+            </button>
+        </div>
+
+        <button class="config-btn" onclick="toggleSettings()">> CONFIG << /button>
+
+                <div class="settings-panel" id="settingsPanel">
+                    <h3 style="margin-bottom: 1.5rem;">SETTINGS</h3>
+                    <label
+                        style="display:block; text-align:left; color: #2c3e50; margin-bottom: 0.5rem; font-size: 1rem;">ESP32
+                        IP:</label>
+                    <input type="text" id="ipInput" placeholder="192.168.4.1" value="192.168.4.1">
+
+                    <div style="display:flex; gap:10px; align-items:center; margin-bottom: 2rem;">
+                        <input type="checkbox" id="demoMode" style="width:20px; height:20px; margin:0;" checked>
+                        <label for="demoMode" style="font-size: 1rem;">DEMO MODE</label>
+                    </div>
+
+                    <button class="water-btn" onclick="saveSettings()">[ SAVE ]</button>
+                </div>
+    </div>
+
+    <script>
+        // State
+        let espIP = localStorage.getItem('esp_ip') || '192.168.4.1';
+        let isDemo = localStorage.getItem('is_demo') !== 'false';
+        let currentMoisture = 20;
+        let isWatering = false;
+        let isManualMode = false;
+        let manualTimeout;
+
+        // Elements
+        const icon = document.getElementById('gravityIcon');
+        const liquid = document.getElementById('liquidLevel');
+        const moistureText = document.getElementById('moistureValue');
+        const ipInput = document.getElementById('ipInput');
+        const demoCheckbox = document.getElementById('demoMode');
+        const statusDot = document.getElementById('statusDot');
+        const waterBtn = document.getElementById('waterBtn');
+        const slider = document.getElementById('manualSlider');
+
+        // Init
+        ipInput.value = espIP;
+        demoCheckbox.checked = isDemo;
+        updateUI(currentMoisture);
+
+        // Loop
+        setInterval(() => {
+            if (isWatering || isManualMode) return; // Skip if busy or manual
+
+            if (isDemo) {
+                simulateGravityChanges();
+            } else {
+                fetchStatus();
+            }
+        }, 1000); // Faster 8-bit simulation
+
+        // Functions
+        function manualUpdate(val) {
+            isManualMode = true;
+            currentMoisture = parseInt(val);
+            updateUI(currentMoisture);
+
+            // Reset manual mode after 5 seconds of inactivity
+            clearTimeout(manualTimeout);
+            manualTimeout = setTimeout(() => {
+                isManualMode = false;
+            }, 5000);
+        }
+
+        function updateUI(moisture) {
+            moistureText.innerText = moisture;
+            if (!isManualMode) slider.value = moisture;
+
+            // Physics Logic (8-bit style)
+            // Map 0-100 moisture to 5-85 bottom position.
+
+            const minBottom = 5;
+            const maxBottom = 85;
+            const newBottom = minBottom + ((moisture / 100) * (maxBottom - minBottom));
+
+            icon.style.bottom = `${newBottom}%`;
+            liquid.style.height = `${moisture}%`;
+            icon.innerText = `${moisture}`;
+
+            if (moisture < 30) {
+                icon.classList.remove('floating');
+                icon.style.background = "#fff";
+                icon.style.color = "#e74c3c";
+                icon.style.borderColor = "#c0392b";
+            } else {
+                icon.classList.add('floating');
+                icon.style.background = "#2ecc71";
+                icon.style.color = "#fff";
+                icon.style.borderColor = "#27ae60";
+            }
+        }
+
+        function simulateGravityChanges() {
+            if (currentMoisture > 5) {
+                currentMoisture -= Math.floor(Math.random() * 2); // Slow drain
+                if (currentMoisture < 0) currentMoisture = 0;
+            }
+            updateUI(currentMoisture);
+            statusDot.classList.add('connected');
+        }
+
+        async function fetchStatus() {
+            try {
+                const res = await fetch(`http://${espIP}/status`);
+                const data = await res.json();
+                currentMoisture = data.moisture;
+                updateUI(currentMoisture);
+                statusDot.classList.add('connected');
+                statusDot.style.background = "#2ecc71";
+            } catch (e) {
+                statusDot.classList.remove('connected');
+                statusDot.style.background = "#e74c3c";
+                console.error("Connection failed", e);
+            }
+        }
+
+        async function triggerWater() {
+            if (isWatering) return;
+            isWatering = true;
+            waterBtn.classList.add('charging');
+
+            if (isDemo) {
+                setTimeout(() => {
+                    currentMoisture = 100;
+                    updateUI(currentMoisture);
+                    waterBtn.classList.remove('charging');
+                    isWatering = false;
+                }, 2000);
+                return;
+            }
+
+            try {
+                await fetch(`http://${espIP}/water`, { method: 'POST' });
+                setTimeout(() => {
+                    waterBtn.classList.remove('charging');
+                    isWatering = false;
+                    fetchStatus();
+                }, 2000);
+            } catch (e) {
+                alert("Failed to contact ESP32");
+                waterBtn.classList.remove('charging');
+                isWatering = false;
+            }
+        }
+
+        function resetData() {
+            // Force reset to 0
+            currentMoisture = 0;
+            isManualMode = true; // Engage manual mode to prevent immediate overwrite from sensor for a moment
+            updateUI(0);
+
+            // Optional: Visual feedback
+            const btn = document.querySelector('.reset-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "[ CLEARED ]";
+
+            clearTimeout(manualTimeout);
+            manualTimeout = setTimeout(() => {
+                isManualMode = false;
+                btn.innerText = originalText;
+            }, 2000); // Hold 0 for 2 seconds then resume
+        }
+
+        function toggleSettings() {
+            document.getElementById('settingsPanel').classList.toggle('active');
+        }
+
+        function saveSettings() {
+            espIP = ipInput.value;
+            isDemo = demoCheckbox.checked;
+            localStorage.setItem('esp_ip', espIP);
+            localStorage.setItem('is_demo', isDemo);
+            toggleSettings();
+            if (isDemo) currentMoisture = 50;
+            updateUI(currentMoisture);
+        }
+    </script>
+</body>
+
+</html>
